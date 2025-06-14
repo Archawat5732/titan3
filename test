@@ -1035,47 +1035,55 @@ RunConcurrent(function()
     local gold = Players.LocalPlayer.PlayerGui.Interface.Topbar.Main.Currencies.Gold.Amount.Text
     local gradeText = Players.LocalPlayer.PlayerGui.Interface.Equipment.Categories.Upgrades.Main.Title.Text
 
-    -- ดึงเกรด เช่น "B", "A-", "S+" จากข้อความ [B+ GRADE]
     local extractedGrade = string.match(gradeText, "%[(%a%+?%-?)%s*GRADE%]")
 
-    -- ผู้ใช้สามารถกำหนดจำนวนรอบที่ต้องการเช็คได้ตรงนี้
     local maxChecks = _G.Configs["MaxChecks"]
 
-    -- ฟังก์ชันอัปเกรดทั้งหมด
-    local function performUpgrades()
-        local upgrades = {
-            "ODM_Range",
-            "ODM_Control",
-            "ODM_Speed",
-            "ODM_Gas",
-            "ODM_Damage",
-            "Blade_Durability",
-            "Crit_Chance",
-            "Crit_Damage"
-        }
+    local upgrades = {
+        "ODM_Control",
+        "ODM_Speed",
+        "ODM_Gas",
+        "ODM_Damage",
+        "Blade_Durability",
+        "Crit_Chance",
+        "Crit_Damage"
+    }
 
-        for _, upgradeName in ipairs(upgrades) do
-            local nilCount = 0
+    local function performFixedRounds()
+        for round = 1, maxChecks do
+            print("Fixed round " .. round .. " of " .. maxChecks)
+            for _, upgradeName in ipairs(upgrades) do
+                RemoteFunction:InvokeServer(unpack({
+                    "S_Equipment",
+                    "Upgrade",
+                    upgradeName
+                }))
+                task.wait(0.2)
+            end
+        end
+    end
 
-            while nilCount < maxChecks do
+    local function performUntilSilent()
+        while true do
+            local allNil = true
+            for _, upgradeName in ipairs(upgrades) do
                 local result = RemoteFunction:InvokeServer(unpack({
                     "S_Equipment",
                     "Upgrade",
                     upgradeName
                 }))
-
-                if result == nil then
-                    nilCount += 1
-                    print(string.format("%s is nil (%d/%d)", upgradeName, nilCount, maxChecks))
-                else
-                    print(upgradeName .. " returned non-nil. Retrying...")
-                    nilCount = 0 -- ถ้าเจอค่าไม่ใช่ nil ให้รีเซ็ตนับใหม่
+                if result ~= nil then
+                    allNil = false
                 end
-
+                task.wait(0.2)
+            end
+            if allNil then
+                print("All upgrades returned nil. Stopping.")
+                break
+            else
+                print("Some upgrades not nil yet. Continuing...")
                 task.wait(1)
             end
-
-            print(upgradeName .. " upgrade attempts done.")
         end
     end
 
@@ -1100,15 +1108,20 @@ RunConcurrent(function()
     end
 
     if typeof(gold) == "string" then
-        -- ถ้าเกรดเป็น S, S+, หรือ S- ให้ข้ามการอัปเกรด
         if extractedGrade == "S" or extractedGrade == "S+" or extractedGrade == "S-" then
             print("Grade is already S-level. Skipping upgrades.")
         else
-            print("Grade is below S. Performing upgrades...")
-            performUpgrades()
+            print("Grade is below S.")
+
+            if maxChecks > 0 then
+                print("Performing fixed " .. maxChecks .. " rounds of upgrades...")
+                performFixedRounds()
+            else
+                print("Performing upgrades until all return nil...")
+                performUntilSilent()
+            end
         end
 
-        -- สร้าง mission
         createMission(_G.Configs["Mission Difficulty"], "Missions", "Shiganshina", "Skirmish")
 
         for _, modifier in ipairs(_G.Configs["Modifiers"]) do
@@ -1121,6 +1134,7 @@ RunConcurrent(function()
         warn("gold ไม่ใช่ string")
     end
 end)
+
 
 
 
