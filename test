@@ -1032,7 +1032,6 @@ RunConcurrent(function()
 
     local function performFixedRounds()
         for round = 1, maxChecks do
-            print("Fixed round " .. round .. " of " .. maxChecks)
             for _, upgradeName in ipairs(upgrades) do
                 RemoteFunction:InvokeServer(unpack({
                     "S_Equipment",
@@ -1059,10 +1058,8 @@ RunConcurrent(function()
                 task.wait(0.2)
             end
             if allNil then
-                print("All upgrades returned nil. Stopping.")
                 break
             else
-                print("Some upgrades not nil yet. Continuing...")
                 task.wait(1)
             end
         end
@@ -1120,17 +1117,13 @@ RunConcurrent(function()
 
     if typeof(gold) == "string" then
         if extractedGrade == "S" or extractedGrade == "S+" or extractedGrade == "S-" then
-            print("Grade is already S-level. Skipping upgrades.")
         else
-            print("Grade is below S.")
 
             if auto_Upgrade_Gear == true then
                 if maxChecks > 0 then
-                    print("Performing fixed " .. maxChecks .. " rounds of upgrades...")
                     performFixedRounds()
                     showOkMessage()
                 else
-                    print("Performing upgrades until all return nil...")
                     performUntilSilent()
                     showOkMessage()
                 end
