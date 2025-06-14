@@ -1021,6 +1021,7 @@ RunConcurrent(function()
     local maxChecks = _G.Configs["MaxChecks"]
 
     local upgrades = {
+        "ODM_Range",
         "ODM_Control",
         "ODM_Speed",
         "ODM_Gas",
