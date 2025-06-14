@@ -1104,7 +1104,9 @@ RunConcurrent(function()
             end
         end
 
-        createMission(_G.Configs["Mission Difficulty"], "Missions", "Shiganshina", "Skirmish")
+        local create_or_not = _G.Configs["Auto Create Mission"]
+        if create_or_not == true then
+            createMission(_G.Configs["Mission Difficulty"], "Missions", "Shiganshina", "Skirmish")
 
         for _, modifier in ipairs(_G.Configs["Modifiers"]) do
             modifyMission(modifier)
