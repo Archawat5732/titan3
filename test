@@ -1068,6 +1068,31 @@ RunConcurrent(function()
         end
     end
 
+    -- ฟังก์ชันแสดงข้อความ OK บน UI สีเขียวตรงกลางหน้าจอ
+    local function showOkMessage()
+        local player = Players.LocalPlayer
+        local playerGui = player:WaitForChild("PlayerGui")
+
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "UpgradeOkMessageGui"
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = playerGui
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(0, 200, 0, 50)
+        label.Position = UDim2.new(0.5, -100, 0.5, -25)
+        label.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.Text = "OK"
+        label.Font = Enum.Font.SourceSansBold
+        label.TextScaled = true
+        label.Parent = screenGui
+
+        task.delay(3, function()
+            screenGui:Destroy()
+        end)
+    end
+
     local function createMission(difficulty, missionType, name, objective)
         local args = { "S_Missions", "Create", {
             ["Difficulty"] = difficulty,
@@ -1087,7 +1112,9 @@ RunConcurrent(function()
         local args = { "S_Missions", "Start" }
         return RemoteFunction:InvokeServer(unpack(args))
     end
+
     local auto_Upgrade_Gear = _G.Configs["Auto Upgrade Gear"]
+
     if typeof(gold) == "string" then
         if extractedGrade == "S" or extractedGrade == "S+" or extractedGrade == "S-" then
             print("Grade is already S-level. Skipping upgrades.")
@@ -1098,9 +1125,11 @@ RunConcurrent(function()
                 if maxChecks > 0 then
                     print("Performing fixed " .. maxChecks .. " rounds of upgrades...")
                     performFixedRounds()
+                    showOkMessage()
                 else
                     print("Performing upgrades until all return nil...")
                     performUntilSilent()
+                    showOkMessage()
                 end
             end
         end
@@ -1120,6 +1149,7 @@ RunConcurrent(function()
         warn("gold ไม่ใช่ string")
     end
 end)
+
 
 
 
