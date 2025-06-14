@@ -14,26 +14,8 @@ RunConcurrent(function()
         ts:TeleportToPlaceInstance(game.PlaceId, game.JobId, p)
     end
 
-    local VirtualInputManager = game:GetService("VirtualInputManager")
-
-    function SimulateLeftClick(x, y)
-        VirtualInputManager:SendMouseMoveEvent(x, y, game)
-        task.wait()
-        VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 0)
-        task.wait()
-        VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 0)
-        task.wait()
-        VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 0)
-        task.wait(0.5)
-        VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 0)
-        task.wait(0.5)
-        VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 0)
-        task.wait(0.5)
-        VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 0)
-    end
-
     function MainSequence()
-        task.wait(80)
+        task.wait(_G.Configs["Rejoin_Second"])
         rejoinServer()
     end
 
