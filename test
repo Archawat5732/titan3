@@ -1025,9 +1025,10 @@ end)
 
 -- === MISSION ===
 -- === MISSION ===
+-- === MISSION ===
 RunConcurrent(function()
     repeat task.wait() until game:IsLoaded()
-    task.wait(10)
+    task.wait(13)
 
     local Players = game:GetService("Players")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -1036,8 +1037,11 @@ RunConcurrent(function()
     local gold = Players.LocalPlayer.PlayerGui.Interface.Topbar.Main.Currencies.Gold.Amount.Text
     local gradeText = Players.LocalPlayer.PlayerGui.Interface.Equipment.Categories.Upgrades.Main.Title.Text
 
-    -- ดึงค่าเกรด เช่น "B", "S", "S+", "A-"
+    -- ดึงเกรด เช่น "B", "A-", "S+" จากข้อความ [B+ GRADE]
     local extractedGrade = string.match(gradeText, "%[(%a%+?%-?)%s*GRADE%]")
+
+    -- ผู้ใช้สามารถกำหนดจำนวนรอบที่ต้องการเช็คได้ตรงนี้
+    local maxChecks = _G.Configs["MaxChecks"]
 
     -- ฟังก์ชันอัปเกรดทั้งหมด
     local function performUpgrades()
@@ -1053,9 +1057,9 @@ RunConcurrent(function()
         }
 
         for _, upgradeName in ipairs(upgrades) do
-            local nilDetected = false
+            local nilCount = 0
 
-            while true do
+            while nilCount < maxChecks do
                 local result = RemoteFunction:InvokeServer(unpack({
                     "S_Equipment",
                     "Upgrade",
@@ -1063,20 +1067,17 @@ RunConcurrent(function()
                 }))
 
                 if result == nil then
-                    if nilDetected then
-                        print(upgradeName .. " confirmed nil twice. Moving on.")
-                        break
-                    else
-                        print(upgradeName .. " first nil detected. Checking one more time...")
-                        nilDetected = true
-                        task.wait(1)
-                    end
+                    nilCount += 1
+                    print(string.format("%s is nil (%d/%d)", upgradeName, nilCount, maxChecks))
                 else
                     print(upgradeName .. " returned non-nil. Retrying...")
-                    nilDetected = false
-                    task.wait(1)
+                    nilCount = 0 -- ถ้าเจอค่าไม่ใช่ nil ให้รีเซ็ตนับใหม่
                 end
+
+                task.wait(1)
             end
+
+            print(upgradeName .. " upgrade attempts done.")
         end
     end
 
@@ -1101,10 +1102,11 @@ RunConcurrent(function()
     end
 
     if typeof(gold) == "string" then
-        -- ถ้า grade เป็น S, S-, S+ ให้ข้ามการอัปเกรด
-        if extractedGrade == "S" or extractedGrade == "S-" or extractedGrade == "S+" then
+        -- ถ้าเกรดเป็น S, S+, หรือ S- ให้ข้ามการอัปเกรด
+        if extractedGrade == "S" or extractedGrade == "S+" or extractedGrade == "S-" then
             print("Grade is already S-level. Skipping upgrades.")
         else
+            print("Grade is below S. Performing upgrades...")
             performUpgrades()
         end
 
