@@ -1038,70 +1038,44 @@ RunConcurrent(function()
     -- ดึงเกรด เช่น "B", "A-", "S+" จากข้อความ [B+ GRADE]
     local extractedGrade = string.match(gradeText, "%[(%a%+?%-?)%s*GRADE%]")
 
-    -- กำหนดรอบการ retry หากยังมีบางค่าไม่เป็น nil
-    local maxUpgradeCycles = 20
-    local waitBetweenCycles = 1
+    -- ผู้ใช้สามารถกำหนดจำนวนรอบที่ต้องการเช็คได้ตรงนี้
+    local maxChecks = _G.Configs["MaxChecks"]
 
-    local upgrades = {
-        "ODM_Control",
-        "ODM_Speed",
-        "ODM_Gas",
-        "ODM_Damage",
-        "Blade_Durability",
-        "Crit_Chance",
-        "Crit_Damage"
-    }
-
-    -- ฟังก์ชันเช็คและคืนลิสต์ของอัพเกรดที่ยังไม่เป็น nil
-    local function tryUpgradesOnce()
-        local notNilUpgrades = {}
+    -- ฟังก์ชันอัปเกรดทั้งหมด
+    local function performUpgrades()
+        local upgrades = {
+            "ODM_Range",
+            "ODM_Control",
+            "ODM_Speed",
+            "ODM_Gas",
+            "ODM_Damage",
+            "Blade_Durability",
+            "Crit_Chance",
+            "Crit_Damage"
+        }
 
         for _, upgradeName in ipairs(upgrades) do
-            local result = RemoteFunction:InvokeServer(unpack({
-                "S_Equipment",
-                "Upgrade",
-                upgradeName
-            }))
+            local nilCount = 0
 
-            if result == nil then
-                print(upgradeName .. " = nil")
-            else
-                print(upgradeName .. " upgraded!")
-                table.insert(notNilUpgrades, upgradeName)
-            end
+            while nilCount < maxChecks do
+                local result = RemoteFunction:InvokeServer(unpack({
+                    "S_Equipment",
+                    "Upgrade",
+                    upgradeName
+                }))
 
-            task.wait(0.2)
-        end
-
-        return notNilUpgrades
-    end
-
-    -- วนลูปอัปเกรดเฉพาะตัวที่ยังอัพได้ จนทุกตัวเป็น nil หรือครบรอบ max
-    local function performAllUpgradesUntilSilent()
-        for cycle = 1, maxUpgradeCycles do
-            print("Upgrade Cycle: " .. cycle)
-
-            local upgradesToDo = tryUpgradesOnce()
-
-            if #upgradesToDo == 0 then
-                print("All upgrades returned nil. Proceeding to mission.")
-                break
-            else
-                print("Still upgrades to do: " .. table.concat(upgradesToDo, ", "))
-
-                -- ไล่อัพเกรดเฉพาะตัวที่ยังไม่ nil
-                for _, upgradeName in ipairs(upgradesToDo) do
-                    local result = RemoteFunction:InvokeServer(unpack({
-                        "S_Equipment",
-                        "Upgrade",
-                        upgradeName
-                    }))
-                    print("Upgraded " .. upgradeName)
-                    task.wait(0.2)
+                if result == nil then
+                    nilCount += 1
+                    print(string.format("%s is nil (%d/%d)", upgradeName, nilCount, maxChecks))
+                else
+                    print(upgradeName .. " returned non-nil. Retrying...")
+                    nilCount = 0 -- ถ้าเจอค่าไม่ใช่ nil ให้รีเซ็ตนับใหม่
                 end
 
-                task.wait(waitBetweenCycles)
+                task.wait(1)
             end
+
+            print(upgradeName .. " upgrade attempts done.")
         end
     end
 
@@ -1126,14 +1100,15 @@ RunConcurrent(function()
     end
 
     if typeof(gold) == "string" then
+        -- ถ้าเกรดเป็น S, S+, หรือ S- ให้ข้ามการอัปเกรด
         if extractedGrade == "S" or extractedGrade == "S+" or extractedGrade == "S-" then
-            print("Grade is S-level. Skipping upgrades.")
+            print("Grade is already S-level. Skipping upgrades.")
         else
-            print("Grade is below S. Performing upgrade cycles...")
-            performAllUpgradesUntilSilent()
+            print("Grade is below S. Performing upgrades...")
+            performUpgrades()
         end
 
-        -- สร้าง mission ต่อเลย
+        -- สร้าง mission
         createMission(_G.Configs["Mission Difficulty"], "Missions", "Shiganshina", "Skirmish")
 
         for _, modifier in ipairs(_G.Configs["Modifiers"]) do
@@ -1146,6 +1121,7 @@ RunConcurrent(function()
         warn("gold ไม่ใช่ string")
     end
 end)
+
 
 
 
