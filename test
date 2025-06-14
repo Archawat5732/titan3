@@ -1,4 +1,3 @@
-
 -- Utility to run scripts concurrently
 local function RunConcurrent(fn)
     task.spawn(fn)
@@ -831,10 +830,10 @@ RunConcurrent(function()
 
     -- การตั้งค่า
     local CONFIG = {
-        CLICK_DELAY = 0.1,                    -- ลดเวลารอระหว่างคลิก
-        CHECK_INTERVAL = 0.5,                 -- ตรวจสอบทุก 0.5 วินาที
-        INITIAL_WAIT = 5,                     -- รอเริ่มต้น 5 วินาที
-        STUCK_TIMEOUT = 20,                   -- ถ้า Kill ไม่เปลี่ยน 20 วินาที จะคลิก
+        CLICK_DELAY = 0.1,    -- ลดเวลารอระหว่างคลิก
+        CHECK_INTERVAL = 0.5, -- ตรวจสอบทุก 0.5 วินาที
+        INITIAL_WAIT = 5,     -- รอเริ่มต้น 5 วินาที
+        STUCK_TIMEOUT = 20,   -- ถ้า Kill ไม่เปลี่ยน 20 วินาที จะคลิก
         CLICK_POSITION = _G.Configs["PositionXY"],
     }
 
@@ -1107,13 +1106,13 @@ RunConcurrent(function()
         local create_or_not = _G.Configs["Auto Create Mission"]
         if create_or_not == true then
             createMission(_G.Configs["Mission Difficulty"], "Missions", "Shiganshina", "Skirmish")
+            for _, modifier in ipairs(_G.Configs["Modifiers"]) do
+                modifyMission(modifier)
+                task.wait(0.1)
+            end
 
-        for _, modifier in ipairs(_G.Configs["Modifiers"]) do
-            modifyMission(modifier)
-            task.wait(0.1)
+            startMission()
         end
-
-        startMission()
     else
         warn("gold ไม่ใช่ string")
     end
