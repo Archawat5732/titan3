@@ -1087,25 +1087,27 @@ RunConcurrent(function()
         local args = { "S_Missions", "Start" }
         return RemoteFunction:InvokeServer(unpack(args))
     end
-
+    local auto_Upgrade_Gear = _G.Configs["Auto Upgrade Gear"]
     if typeof(gold) == "string" then
         if extractedGrade == "S" or extractedGrade == "S+" or extractedGrade == "S-" then
             print("Grade is already S-level. Skipping upgrades.")
         else
             print("Grade is below S.")
 
-            if maxChecks > 0 then
-                print("Performing fixed " .. maxChecks .. " rounds of upgrades...")
-                performFixedRounds()
-            else
-                print("Performing upgrades until all return nil...")
-                performUntilSilent()
+            if auto_Upgrade_Gear == true then
+                if maxChecks > 0 then
+                    print("Performing fixed " .. maxChecks .. " rounds of upgrades...")
+                    performFixedRounds()
+                else
+                    print("Performing upgrades until all return nil...")
+                    performUntilSilent()
+                end
             end
         end
 
-        local createMission = _G.Configs["Auto Create Mission"]
+        local create_Mission_OrNot = _G.Configs["Auto Create Mission"]
 
-        if createMission == true then
+        if create_Mission_OrNot == true then
             createMission(_G.Configs["Mission Difficulty"], "Missions", "Shiganshina", "Skirmish")
 
             for _, modifier in ipairs(_G.Configs["Modifiers"]) do
