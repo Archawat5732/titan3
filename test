@@ -1068,12 +1068,11 @@ RunConcurrent(function()
         end
     end
 
-    -- ฟังก์ชันแสดงข้อความ OK บน UI สีเขียวตรงกลางหน้าจอ
     local function showOkMessage()
         local player = Players.LocalPlayer
         local playerGui = player:WaitForChild("PlayerGui")
 
-        -- เช็คถ้ามี GUI เดิมอยู่แล้ว ให้ลบทิ้งก่อน
+        -- ลบ GUI เดิมถ้ามี (เพื่อป้องกันซ้ำซ้อน)
         local existingGui = playerGui:FindFirstChild("UpgradeOkMessageGui")
         if existingGui then
             existingGui:Destroy()
@@ -1089,13 +1088,12 @@ RunConcurrent(function()
         label.Position = UDim2.new(0.5, -100, 0.5, -25)
         label.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
         label.TextColor3 = Color3.new(1, 1, 1)
-        label.Text = "Upgrade OK!!"
+        label.Text = "OK"
         label.Font = Enum.Font.SourceSansBold
         label.TextScaled = true
         label.Parent = screenGui
-
-        -- ไม่มีการทำลาย GUI หรือซ่อน GUI อัตโนมัติ
     end
+
 
 
     local function createMission(difficulty, missionType, name, objective)
